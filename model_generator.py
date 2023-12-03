@@ -34,7 +34,7 @@ class SearchSpace(object):
 
     def vocab_dict(self):
         # for fully connected layer
-        nodes = [8, 16, 32, 64, 128, 256, 512]
+        nodes = [8, 16, 32, 64, 128]
         act_funcs = ['sigmoid', 'tanh', 'relu', 'elu']
         
         # for block layers
@@ -129,10 +129,11 @@ class ModelGenerator(SearchSpace, F1_score):
                 model.add(Activation(activation=layer_conf[1]))
                 model.add(TimeDistributed(Flatten()))
             elif i==1: # second layer
-                model.add(Dropout(dropout_rate, name="dropout"))
-                model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
-            elif i==2: # third layer
+                #model.add(Dropout(dropout_rate, name="dropout"))
+                #model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
                 model.add(Bidirectional(LSTM(units=layer_conf[0], return_sequences=True), name="bilstm"))
+            elif i==2: # third layer
+                #model.add(Bidirectional(LSTM(units=layer_conf[0], return_sequences=True), name="bilstm"))
                 model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
             
             # create conv1d block
@@ -160,8 +161,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            elif 'dropout' in layer.name:
-                layer_configs.append(('dropout', layer.get_config()))
+            #elif 'dropout' in layer.name:
+             #   layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
                 
@@ -171,7 +172,8 @@ class ModelGenerator(SearchSpace, F1_score):
             
         j = 0
         for i, layer in enumerate(model.layers):
-            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+           # if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
@@ -202,8 +204,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            elif 'dropout' in layer.name:
-                layer_configs.append(('dropout', layer.get_config()))
+            #elif 'dropout' in layer.name:
+             #   layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
         
@@ -214,7 +216,8 @@ class ModelGenerator(SearchSpace, F1_score):
         j = 0
         for i, layer in enumerate(model.layers):
             #if 'dropout' not in layer.name:
-            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+            #if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
