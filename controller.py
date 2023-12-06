@@ -37,22 +37,24 @@ class Controller(SearchSpace):
 
     #for take sampling architecture seq
     def sample_architecture_sequences(self, model, number_of_samples):   #controller_model and sample per controller epoch
-        final_layer_id = len(self.vocab) # index of final layer in vocab
-        dropout_id = final_layer_id - 1 # index of dropout layer in vocab   
-        vocab_idx = [0] + list(self.vocab.keys()) # a list containing all the vocab indices
+        # define values needed for sampling 
+        final_layer_id = len(self.vocab) 
+        bilstm_id = final_layer_id - 1   
+        vocab_idx = [0] + list(self.vocab.keys()) 
         samples = [] # for store the generated architecture sequence
+        
         print("GENERATING ARCHITECTURE SAMPLES...")
         print('------------------------------------------------------')
         
-        # to run the controller until samples_per_controller_epoch is reached
+        # while number of architectures sampled is less than required
         while len(samples) < number_of_samples:
-            seed = [] # for storing the architecture sequence
+            seed = [] # initialise the empty list for architecture sequence
             
-            # while len of generated archi sequence is less than maximum architecture length 
+            # while len of generated sequence is less than maximum architecture length
             while len(seed) < self.max_len:
                 
                 # pad seq for corectly shaped input for controller model
-                sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='post', truncating='post')
+                sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='post', truncating='post') #NAN
                 sequence = sequence.reshape(1, 1, self.max_len - 1)
                 
                 # given the previous elements, get softmax distribution for the next element
@@ -65,21 +67,20 @@ class Controller(SearchSpace):
                 # sample the next element randomly given the probability of next elements (the softmax distribution)
                 next = np.random.choice(vocab_idx, size=1, p=probab)[0]
                 
-                # 
-                if next == dropout_id and len(seed) == 0:  
-                   # print("apa itu droput_id_1:", dropout_id) 
+                if next == bilstm_id and len(seed) == 0:  
                     continue
+                
                 if next == final_layer_id and len(seed) == 0:
-                   # print("apa itu final_layer_id_1:", final_layer_id)
                     continue
+                
                 if next == final_layer_id:
                     seed.append(next)
-                   # print("apa itu final_layer_id_2:", final_layer_id)
                     break
+                
                 if len(seed) == self.max_len - 1:
                     seed.append(final_layer_id)
-                   # print("apa itu final_layer_id_3:", final_layer_id)
                     break
+                
                 if not next == 0:
                     seed.append(next)
                     
@@ -92,6 +93,8 @@ class Controller(SearchSpace):
     def control_model(self, controller_input_shape, controller_batch_size):
         # input layer
         main_input = Input(shape=controller_input_shape, name='main_input')
+        print ("debug incompatible:", controller_input_shape)
+        print("debug incompatible shape:", controller_input_shape.shape)
         x = LSTM(self.controller_lstm_dim, return_sequences=True)(main_input)
         main_output = Dense(self.controller_classes, activation='softmax', name='main_output')(x)
         model = Model(inputs=[main_input], outputs=[main_output])
@@ -134,6 +137,7 @@ class Controller(SearchSpace):
     def hybrid_control_model(self, controller_input_shape, controller_batch_size):
         #main_input = Input(shape=controller_input_shape, batch_shape=controller_batch_size, name='main_input')         #AKU GANTI
         main_input = Input(shape=controller_input_shape, name='main_input')
+        print ("debug incompatible:", controller_input_shape)
         x = LSTM(self.controller_lstm_dim, return_sequences=True)(main_input)
         predictor_output = Dense(1, activation='sigmoid', name='predictor_output')(x)
         main_output = Dense(self.controller_classes, activation='softmax', name='main_output')(x)

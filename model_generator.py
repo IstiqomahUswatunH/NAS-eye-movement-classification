@@ -34,7 +34,7 @@ class SearchSpace(object):
 
     def vocab_dict(self):
         # for fully connected layer
-        nodes = [8, 16, 32, 64, 128]
+        nodes = [8, 16, 32, 64]
         act_funcs = ['sigmoid', 'tanh', 'relu', 'elu']
         
         # for block layers
@@ -51,7 +51,7 @@ class SearchSpace(object):
                 layer_id.append(len(act_funcs) * i + j + 1)
          
         vocab = dict(zip(layer_id, layer_params))   #tuple 
-        # print ("apa itu vocab?", vocab)
+        #print ("apa itu vocab?", vocab)
         # add dropout (keknnya ga perlu deh)
         # vocab[len(vocab) + 1] = (('dropout'))
         # add final layer
@@ -59,6 +59,7 @@ class SearchSpace(object):
             vocab[len(vocab) + 1] = (self.target_classes - 1, 'sigmoid')
         else:
             vocab[len(vocab) + 1] = (self.target_classes, 'softmax')
+        print ("cek vocab class ", vocab)
         return vocab
 
     #----------------------------------------------create search space-----------------------------------------------------------#
@@ -140,7 +141,7 @@ class ModelGenerator(SearchSpace, F1_score):
             # i is index of layer_conf
             # layer_conf[0] = layer nodes
             # layer_conf[1] = activation function
-        # print(model.summary())
+        print(model.summary())
         return model
 
     def compile_model(self, model):
