@@ -54,7 +54,7 @@ class Controller(SearchSpace):
             while len(seed) < self.max_len:
                 
                 # pad seq for corectly shaped input for controller model
-                sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='post', truncating='post') #NAN
+                sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='pre') 
                 sequence = sequence.reshape(1, 1, self.max_len - 1)
                 
                 # given the previous elements, get softmax distribution for the next element
@@ -93,8 +93,8 @@ class Controller(SearchSpace):
     def control_model(self, controller_input_shape, controller_batch_size):
         # input layer
         main_input = Input(shape=controller_input_shape, name='main_input')
-        print ("debug incompatible:", controller_input_shape)
-        print("debug incompatible shape:", controller_input_shape.shape)
+        #print ("debug incompatible:", controller_input_shape)
+        #print("debug incompatible shape:", controller_input_shape.shape)
         x = LSTM(self.controller_lstm_dim, return_sequences=True)(main_input)
         main_output = Dense(self.controller_classes, activation='softmax', name='main_output')(x)
         model = Model(inputs=[main_input], outputs=[main_output])

@@ -59,7 +59,7 @@ class SearchSpace(object):
             vocab[len(vocab) + 1] = (self.target_classes - 1, 'sigmoid')
         else:
             vocab[len(vocab) + 1] = (self.target_classes, 'softmax')
-        print ("cek vocab class ", vocab)
+        #print ("cek vocab class ", vocab)
         return vocab
 
     #----------------------------------------------create search space-----------------------------------------------------------#
@@ -128,20 +128,24 @@ class ModelGenerator(SearchSpace, F1_score):
                 model.add(Conv1D(filters=layer_conf[0], kernel_size=3, padding="same", input_shape= input_shape, name="conv1d_1")) # kernel size follow michael's paper
                 model.add(BatchNormalization(axis=-1))
                 model.add(Activation(activation=layer_conf[1]))
+            if i==1: # second layer
+                #conv1d-2
+                model.add(Conv1D(filters=layer_conf[0], kernel_size=3, padding="same", name="conv1d_2"))
+                model.add(BatchNormalization(axis=-1))
+                model.add(Activation(activation=layer_conf[1]))
                 model.add(TimeDistributed(Flatten()))
-            elif i==1: # second layer
-                #model.add(Dropout(dropout_rate, name="dropout"))
-                #model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
+            elif i==2: # fourth layer
+                model.add(Dropout(dropout_rate, name="dropout"))
+                model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
+            elif i==3: # fifth layer
                 model.add(Bidirectional(LSTM(units=layer_conf[0], return_sequences=True), name="bilstm"))
-            elif i==2: # third layer
-                #model.add(Bidirectional(LSTM(units=layer_conf[0], return_sequences=True), name="bilstm"))
                 model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
             
             # create conv1d block
             # i is index of layer_conf
             # layer_conf[0] = layer nodes
             # layer_conf[1] = activation function
-        print(model.summary())
+       # print(model.summary())
         return model
 
     def compile_model(self, model):
@@ -162,8 +166,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            #elif 'dropout' in layer.name:
-             #   layer_configs.append(('dropout', layer.get_config()))
+            elif 'dropout' in layer.name:
+                layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
                 
@@ -174,7 +178,7 @@ class ModelGenerator(SearchSpace, F1_score):
         j = 0
         for i, layer in enumerate(model.layers):
            # if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
-            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
@@ -205,8 +209,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            #elif 'dropout' in layer.name:
-             #   layer_configs.append(('dropout', layer.get_config()))
+            elif 'dropout' in layer.name:
+                layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
         
@@ -218,7 +222,7 @@ class ModelGenerator(SearchSpace, F1_score):
         for i, layer in enumerate(model.layers):
             #if 'dropout' not in layer.name:
             #if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
-            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
@@ -233,9 +237,9 @@ class ModelGenerator(SearchSpace, F1_score):
                     layer.set_weights(self.shared_weights['weights'].values[search_index[0]])
                 j += 1
     
-    def train_model(self, model, x_data, y_data, nb_epochs, validation_split=0.3, callbacks=None): 
-        print ("x dari train_model:", x_data.shape)
-        print ("y dari train_model:", y_data.shape)
+    def train_model(self, model, x_data, y_data, nb_epochs, callbacks=None): 
+        #print ("x dari train_model:", x_data.shape)
+        #print ("y dari train_model:", y_data.shape)
         
         f1_score = F1_score()
         if self.one_shot:
@@ -243,7 +247,7 @@ class ModelGenerator(SearchSpace, F1_score):
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
-                                validation_split=validation_split,
+                                validation_split=0.3,
                                 callbacks=[f1_score],
                                 verbose=0)
             self.update_weights(model)
@@ -251,7 +255,7 @@ class ModelGenerator(SearchSpace, F1_score):
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
-                                validation_split=validation_split,
+                                validation_split=0.3,
                                 callbacks=[f1_score],
                                 verbose=0)
         return history
