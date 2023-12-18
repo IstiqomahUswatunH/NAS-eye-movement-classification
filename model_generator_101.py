@@ -9,15 +9,16 @@ import tensorflow as tf
 from keras.optimizers import SGD
 from keras import backend as K
 from f1_score import F1_score
+import wandb
 
 class SearchSpace(object):
     """Define search space and encode architectures
 
-    nodes: I follow default for node
+    layer_values: value for num of filter and num of neurons (units) for layer
     act_func: sigmoid, tanh, and relu. Softmax for the last layer
     
     vocab_dict: menghasilkan kemungkinan parameter lapisan untuk sebuah jaringan saraf
-    layer_params: berisi pasangan (nodes, act_funcs) untuk setiap kombinasi yg mungkin
+    layer_params: berisi pasangan (layer_values, act_funcs) untuk setiap kombinasi yg mungkin
     layer_id: berisi ID untuk setiap kombinasi tersebut
     vocab: membuat vocab dg layer_params dan layer_id
     
@@ -34,24 +35,21 @@ class SearchSpace(object):
 
     def vocab_dict(self):
         # for fully connected layer
-        nodes = [8, 16, 32, 64]
-        act_funcs = ['sigmoid', 'tanh', 'relu', 'elu']
-        
-        # for block layers
-        # block_layer = ['conv1d', 'bilstm', 'dense']
+        layer_values = [8, 16, 32, 64]
+        act_funcs = ['tanh', 'relu', 'elu']
         
         # initialize lists for keys and values of vocabulary
         layer_params = []
         layer_id = []
         
         #--------------------------------start creation of vocab from which controller will create a sequence----------------#
-        for i in range(len(nodes)):
+        for i in range(len(layer_values)):
             for j in range(len(act_funcs)):
-                layer_params.append((nodes[i], act_funcs[j]))
+                layer_params.append((layer_values[i], act_funcs[j]))
                 layer_id.append(len(act_funcs) * i + j + 1)
          
         vocab = dict(zip(layer_id, layer_params))   #tuple 
-        #print ("apa itu vocab?", vocab)
+        # print ("apa itu vocab?", vocab)
         # add dropout (keknnya ga perlu deh)
         # vocab[len(vocab) + 1] = (('dropout'))
         # add final layer
@@ -59,7 +57,7 @@ class SearchSpace(object):
             vocab[len(vocab) + 1] = (self.target_classes - 1, 'sigmoid')
         else:
             vocab[len(vocab) + 1] = (self.target_classes, 'softmax')
-        #print ("cek vocab class ", vocab)
+        print ("apa itu vocab?", vocab)
         return vocab
 
     #----------------------------------------------create search space-----------------------------------------------------------#
@@ -125,27 +123,20 @@ class ModelGenerator(SearchSpace, F1_score):
         for i, layer_conf in enumerate(layer_configs): 
             if i==0: # first layer
                 # conv1d-1
-                model.add(Conv1D(filters=layer_conf[0], kernel_size=3, padding="same", input_shape= input_shape, name="conv1d_1")) # kernel size follow michael's paper
-                model.add(BatchNormalization(axis=-1))
-                model.add(Activation(activation=layer_conf[1]))
-            if i==1: # second layer
-                #conv1d-2
-                model.add(Conv1D(filters=layer_conf[0], kernel_size=3, padding="same", name="conv1d_2"))
+                model.add(Conv1D(filters=layer_conf[0], kernel_size=3, padding="same", input_shape= input_shape, name="conv1d")) # kernel size follow michael's paper
                 model.add(BatchNormalization(axis=-1))
                 model.add(Activation(activation=layer_conf[1]))
                 model.add(TimeDistributed(Flatten()))
-            elif i==2: # fourth layer
-                model.add(Dropout(dropout_rate, name="dropout"))
-                model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
-            elif i==3: # fifth layer
+            elif i==1: # second layer
                 model.add(Bidirectional(LSTM(units=layer_conf[0], return_sequences=True), name="bilstm"))
+            elif i==2: # third layer
                 model.add(TimeDistributed(Dense(units=layer_conf[0], activation=layer_conf[1])))
             
             # create conv1d block
             # i is index of layer_conf
-            # layer_conf[0] = layer nodes
+            # layer_conf[0] = layer_calue
             # layer_conf[1] = activation function
-       # print(model.summary())
+        # print(model.summary())
         return model
 
     def compile_model(self, model):
@@ -166,8 +157,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            elif 'dropout' in layer.name:
-                layer_configs.append(('dropout', layer.get_config()))
+            #elif 'dropout' in layer.name:
+             #   layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
                 
@@ -178,7 +169,7 @@ class ModelGenerator(SearchSpace, F1_score):
         j = 0
         for i, layer in enumerate(model.layers):
            # if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
-            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
@@ -197,8 +188,6 @@ class ModelGenerator(SearchSpace, F1_score):
         self.shared_weights.to_pickle(self.weights_file)
 
     def set_model_weights(self, model):
-        # print(model)
-        # get nodes and act_func for each layer
         layer_configs = []
         for layer in model.layers:
             if 'conv1d' in layer.name:
@@ -209,8 +198,8 @@ class ModelGenerator(SearchSpace, F1_score):
                 layer_configs.append(('activation', layer.get_config()))
             elif 'time_distributed' in layer.name:
                 layer_configs.append(('time_distributed', layer.get_config()))
-            elif 'dropout' in layer.name:
-                layer_configs.append(('dropout', layer.get_config()))
+            #elif 'dropout' in layer.name:
+             #   layer_configs.append(('dropout', layer.get_config()))
             elif 'bilstm' in layer.name:
                 layer_configs.append(('bilstm', layer.get_config()))
         
@@ -222,7 +211,7 @@ class ModelGenerator(SearchSpace, F1_score):
         for i, layer in enumerate(model.layers):
             #if 'dropout' not in layer.name:
             #if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
-            if 'conv1d' not in layer.name and 'dropout' not in layer.name and 'bilstm' not in layer.name:
+            if 'conv1d' not in layer.name and 'bilstm' not in layer.name:
                 warnings.simplefilter(action='ignore', category=FutureWarning)
                 bigram_ids = self.shared_weights['bigram_id'].values
                 search_index = []
@@ -237,8 +226,8 @@ class ModelGenerator(SearchSpace, F1_score):
                     layer.set_weights(self.shared_weights['weights'].values[search_index[0]])
                 j += 1
     
-    def train_model(self, model, x_data, y_data, nb_epochs, callbacks=None): 
-        #print ("x dari train_model:", x_data.shape)
+    def train_model(self, model, x_data, y_data, nb_epochs, validation_split=0.3, callbacks=None): 
+       # print ("x dari train_model:", x_data.shape)
         #print ("y dari train_model:", y_data.shape)
         
         f1_score = F1_score()
@@ -247,15 +236,17 @@ class ModelGenerator(SearchSpace, F1_score):
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
-                                validation_split=0.3,
+                                validation_split=validation_split,
                                 callbacks=[f1_score],
-                                verbose=0)
+                                verbose=1)
+            
             self.update_weights(model)
+            
         else:
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
-                                validation_split=0.3,
+                                validation_split=validation_split,
                                 callbacks=[f1_score],
-                                verbose=0)
+                                verbose=1)
         return history

@@ -6,7 +6,7 @@ from keras.models import Model
 from keras.engine.input_layer import Input
 from keras_preprocessing.sequence import pad_sequences  #untuk mengisi (padding) atau memangkas (truncating) sequence
 
-from model_generator import SearchSpace
+from model_generator_101 import SearchSpace
 
 from CONSTANTS import *
 
@@ -39,8 +39,8 @@ class Controller(SearchSpace):
     def sample_architecture_sequences(self, model, number_of_samples):   #controller_model and sample per controller epoch
         # define values needed for sampling 
         final_layer_id = len(self.vocab) 
-        bilstm_id = final_layer_id - 1   
-        vocab_idx = [0] + list(self.vocab.keys()) 
+        #bilstm_id = final_layer_id - 1   
+        vocab_idx = [0] + list(self.vocab.keys()) # dihitung dari 0
         samples = [] # for store the generated architecture sequence
         
         print("GENERATING ARCHITECTURE SAMPLES...")
@@ -66,16 +66,23 @@ class Controller(SearchSpace):
                 
                 # sample the next element randomly given the probability of next elements (the softmax distribution)
                 next = np.random.choice(vocab_idx, size=1, p=probab)[0]
+#                print("cek apa itu next", next)
                 
-                if next == bilstm_id and len(seed) == 0:  
-                    continue
+                #if next == bilstm_id and len(seed) == 0:  
+                 #   continue # if the first element is bilstm, skip it and back to the while loop
                 
                 if next == final_layer_id and len(seed) == 0:
+                    continue # if the first element is final layer, skip it and back to the while loop
+                #cadangan jika ditemukan issue lgi 
+                if next == final_layer_id and len(seed) == 1:
                     continue
                 
-                if next == final_layer_id:
+                #if next == final_layer_id and len(seed) == self.max_len - 1: #ini conditional mengikuti max_len
+                 #   continue # if the las element is final layer and the length of sequence is max_len - 1, skip it and back to the while loop
+                
+                if next == final_layer_id and len(seed) == self.max_len - 1:
                     seed.append(next)
-                    break
+                    break # if the next element is final layer, break the while loop
                 
                 if len(seed) == self.max_len - 1:
                     seed.append(final_layer_id)

@@ -2,11 +2,11 @@ import pickle
 import keras.backend as K
 from keras.utils import to_categorical
 from keras_preprocessing.sequence import pad_sequences
-
+import wandb
 import tensorflow as tf
 from CONSTANTS import *
 from controller import Controller
-from model_generator import ModelGenerator
+from model_generator_101 import ModelGenerator
 
 from utils import *
 
@@ -56,6 +56,14 @@ class MODEL(Controller):
         y = self.y
         # train the model
         history = self.model_generator.train_model(model, x, y, self.architecture_train_epochs)
+        wandb_val_f1_macro = history.history['val_f1_macro'][-1]
+        wandb_val_f1_FIX = history.history['val_f1_FIX'][-1]
+        wandb_val_f1_SACC = history.history['val_f1_SACC'][-1]
+        wandb_val_f1_SP = history.history['val_f1_SP'][-1]
+        #wandb_val_f1_NOISE = history.history['val_f1_NOISE'][-1]
+            
+        wandb.log({'val_f1_macro': wandb_val_f1_macro, 'val_f1_FIX': wandb_val_f1_FIX, 'val_f1_SACC': wandb_val_f1_SACC, 'val_f1_SP': wandb_val_f1_SP})
+
         return history
 
     # stroing the training metrics
@@ -89,7 +97,7 @@ class MODEL(Controller):
     def prepare_controller_data(self, sequences):
         # pad generated sequences to maximum length
         controller_sequences = pad_sequences(sequences, maxlen=self.max_len, padding='post')
-        # 
+        
         xc = controller_sequences[:, :-1].reshape(len(controller_sequences), 1, self.max_len - 1)
         yc = to_categorical(controller_sequences[:, -1], self.controller_classes)
         val_acc_target = [item[1] for item in self.data]

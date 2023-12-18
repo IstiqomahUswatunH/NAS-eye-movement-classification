@@ -6,7 +6,7 @@ from itertools import groupby
 from matplotlib import pyplot as plt
 
 from CONSTANTS import *
-from model_generator import SearchSpace
+from model_generator_101 import SearchSpace
 
 
 ########################################################

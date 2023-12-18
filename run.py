@@ -7,7 +7,6 @@ from CONSTANTS import TOP_N
 from statistics import mode
 from sklearn.preprocessing import MinMaxScaler
 
-
 def load_data(df, seq_len):
   """ Load and preprocess data
 
@@ -37,7 +36,7 @@ def load_data(df, seq_len):
   OHE_Y = OHE_y.reshape(num_sample, seq_len, -1)
 
   # Get the data without label
-  to_drop = ['time', 'confidence', 'handlabeller1', 'handlabeller2', 'handlabeller_final', 'speed_2', 'direction_2', 'acceleration_2', 'speed_4', 'direction_4', 'acceleration_4', 'speed_8', 'direction_8', 'acceleration_8', 'acceleration_16', 'speed_1', 'direction_1', 'acceleration_1']
+  to_drop = ['time', 'confidence', 'handlabeller1', 'handlabeller2', 'handlabeller_final', 'speed_1', 'direction_1', 'acceleration_1', 'speed_2', 'direction_2', 'acceleration_2', 'speed_4', 'direction_4', 'acceleration_4', 'speed_8', 'direction_8', 'acceleration_8', 'acceleration_16']
   X= []
   for sample in time_dataset :
     features = sample.drop(to_drop, axis=1)
@@ -58,19 +57,14 @@ def load_data(df, seq_len):
   return [X, OHE_Y]
 
 seq_len = 65
-df = pd.read_csv(r'C:\Users\Asus\Skripsi\MLPNAS_2\cnnblstm\DATA\merged_6_bridge2_4_koeg.csv')
+df = pd.read_csv(r'C:\Users\Asus\Skripsi\MLPNAS_2\cnnblstm\DATA\merged_all_bridge2.csv')
 # make length of df can be divided 
-df = df.iloc[:-53]
+df = df.iloc[:-8]
 
 dataset = load_data(df, seq_len)
 x, y = dataset
-# print x and y from dataset
-print("besar x:", x.shape)
-print("besar y:", y.shape)
-
 
 nas_object = MODEL(x, y)
 data = nas_object.search()
 
 get_top_n_architectures(TOP_N)
-     

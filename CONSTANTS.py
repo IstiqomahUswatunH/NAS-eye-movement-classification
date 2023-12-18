@@ -1,10 +1,10 @@
 ########################################################
 #                   NAS PARAMETERS                     #
 ########################################################
-CONTROLLER_SAMPLING_EPOCHS = 49 # number of epoch for controller sampling
-SAMPLES_PER_CONTROLLER_EPOCH = 16 #sample architecture per controller epoch
-CONTROLLER_TRAINING_EPOCHS = 50
-ARCHITECTURE_TRAINING_EPOCHS = 200
+CONTROLLER_SAMPLING_EPOCHS = 14 # number of epoch for controller sampling
+SAMPLES_PER_CONTROLLER_EPOCH = 10 #sample architecture per controller epoch
+CONTROLLER_TRAINING_EPOCHS = 10
+ARCHITECTURE_TRAINING_EPOCHS = 5
 CONTROLLER_LOSS_ALPHA = 0.9
 
 ########################################################
