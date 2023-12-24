@@ -1,15 +1,19 @@
-import os
+import os 
+import numpy as np
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
 import warnings
 import pandas as pd
-from keras import optimizers
-from keras.models import Sequential, Model
-from keras.layers import Input, Activation, Conv1D, MaxPooling1D, BatchNormalization, Bidirectional, LSTM, Dense, TimeDistributed, Dropout, Flatten
+from keras_core import optimizers
+from keras_core.models import Sequential, Model
+from keras_core.layers import Input, Activation, Conv1D, MaxPooling1D, BatchNormalization, Bidirectional, LSTM, Dense, TimeDistributed, Dropout, Flatten
 from CONSTANTS import *
-import tensorflow as tf
-from keras.optimizers import SGD
-from keras import backend as K
+
+from keras_core.optimizers import SGD
+from keras_core import backend as K
 from f1_score import F1_score
-import wandb
 
 class SearchSpace(object):
     """Define search space and encode architectures
@@ -238,7 +242,7 @@ class ModelGenerator(SearchSpace, F1_score):
                                 epochs=nb_epochs,
                                 validation_split=validation_split,
                                 callbacks=[f1_score],
-                                verbose=1)
+                                verbose=0)
             
             self.update_weights(model)
             
@@ -248,5 +252,5 @@ class ModelGenerator(SearchSpace, F1_score):
                                 epochs=nb_epochs,
                                 validation_split=validation_split,
                                 callbacks=[f1_score],
-                                verbose=1)
+                                verbose=0)
         return history

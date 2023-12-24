@@ -1,7 +1,11 @@
-import os
+import os 
+import numpy as np
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
 import shutil
 import pickle
-import numpy as np
 from itertools import groupby
 from matplotlib import pyplot as plt
 

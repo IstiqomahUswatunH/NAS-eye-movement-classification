@@ -1,5 +1,10 @@
+import os 
+import numpy as np
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
 import pandas as pd
-import os
 from sklearn.preprocessing import OneHotEncoder
 from utils import *
 from model import MODEL

@@ -1,10 +1,14 @@
 import os
 import numpy as np
-from keras import optimizers
-from keras.layers import Dense, LSTM
-from keras.models import Model
-from keras.engine.input_layer import Input
-from keras_preprocessing.sequence import pad_sequences  #untuk mengisi (padding) atau memangkas (truncating) sequence
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
+from keras_core import optimizers
+from keras_core.layers import Dense, LSTM
+from keras_core.models import Model
+from keras_core.layers import Input
+from keras_core.preprocessing.sequence import pad_sequences  #untuk mengisi (padding) atau memangkas (truncating) sequence
 
 from model_generator_101 import SearchSpace
 
@@ -22,6 +26,9 @@ class Controller(SearchSpace):
         self.controller_decay = CONTROLLER_DECAY
         self.controller_momentum = CONTROLLER_MOMENTUM
         self.use_predictor = CONTROLLER_USE_PREDICTOR
+        self.total_combinations = TOTAL_COMBINATIONS
+        
+        print("TOTAL COMBINATIONS:", self.total_combinations)
 
         # fie path of controller weights to be stoted at
         self.controller_weights = 'LOGS/controller_weights.h5'
@@ -50,9 +57,16 @@ class Controller(SearchSpace):
         while len(samples) < number_of_samples:
             seed = [] # initialise the empty list for architecture sequence
             
+            # KALO ERROR, TARUH LINE CHECK POSSIBLE ARCHITECTURE TARUH DI SINI 
+            
             # while len of generated sequence is less than maximum architecture length
             while len(seed) < self.max_len:
                 
+                # if all possible architectures have been sampled, return the samples
+                if len(self.seq_data) == self.total_combinations:
+                    print ("ALL POSSIBLE ARCHITECTURES HAVE BEEN SAMPLED")
+                    return samples
+                                
                 # pad seq for corectly shaped input for controller model
                 sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='pre') 
                 sequence = sequence.reshape(1, 1, self.max_len - 1)
@@ -62,23 +76,16 @@ class Controller(SearchSpace):
                     (probab, _) = model.predict(sequence)
                 else:
                     probab = model.predict(sequence)
-                probab = probab[0][0]
+                probab = probab[0][0]                
                 
                 # sample the next element randomly given the probability of next elements (the softmax distribution)
                 next = np.random.choice(vocab_idx, size=1, p=probab)[0]
-#                print("cek apa itu next", next)
-                
-                #if next == bilstm_id and len(seed) == 0:  
-                 #   continue # if the first element is bilstm, skip it and back to the while loop
-                
+
                 if next == final_layer_id and len(seed) == 0:
-                    continue # if the first element is final layer, skip it and back to the while loop
-                #cadangan jika ditemukan issue lgi 
-                if next == final_layer_id and len(seed) == 1:
-                    continue
+                    continue # if the first element is final layer, skip it and continue to next iteration
                 
-                #if next == final_layer_id and len(seed) == self.max_len - 1: #ini conditional mengikuti max_len
-                 #   continue # if the las element is final layer and the length of sequence is max_len - 1, skip it and back to the while loop
+                if next == final_layer_id and len(seed) == 1: #conditional, follow max_len
+                    continue
                 
                 if next == final_layer_id and len(seed) == self.max_len - 1:
                     seed.append(next)
@@ -89,11 +96,11 @@ class Controller(SearchSpace):
                     break
                 
                 if not next == 0:
-                    seed.append(next)
+                    seed.append(next) 
                     
-            if seed not in self.seq_data:
-                samples.append(seed)
-                self.seq_data.append(seed)
+            if seed not in self.seq_data: # seed = [(8, relu), (16, tanh), (4, softmax)]
+                samples.append(seed)      # sample = content of seed but < number of samples/SAMPLES_PER_CONTROLLER_EPOCH
+                self.seq_data.append(seed) # seq_data = storage of all samples list
         return samples
 
     # simple LSTM controller

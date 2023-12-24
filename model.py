@@ -1,9 +1,13 @@
+import os 
+import numpy as np
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
 import pickle
-import keras.backend as K
-from keras.utils import to_categorical
-from keras_preprocessing.sequence import pad_sequences
-import wandb
-import tensorflow as tf
+import keras_core.backend as K
+from keras_core.utils import to_categorical
+from keras_core.preprocessing.sequence import pad_sequences 
 from CONSTANTS import *
 from controller import Controller
 from model_generator_101 import ModelGenerator
@@ -56,14 +60,6 @@ class MODEL(Controller):
         y = self.y
         # train the model
         history = self.model_generator.train_model(model, x, y, self.architecture_train_epochs)
-        wandb_val_f1_macro = history.history['val_f1_macro'][-1]
-        wandb_val_f1_FIX = history.history['val_f1_FIX'][-1]
-        wandb_val_f1_SACC = history.history['val_f1_SACC'][-1]
-        wandb_val_f1_SP = history.history['val_f1_SP'][-1]
-        #wandb_val_f1_NOISE = history.history['val_f1_NOISE'][-1]
-            
-        wandb.log({'val_f1_macro': wandb_val_f1_macro, 'val_f1_FIX': wandb_val_f1_FIX, 'val_f1_SACC': wandb_val_f1_SACC, 'val_f1_SP': wandb_val_f1_SP})
-
         return history
 
     # stroing the training metrics

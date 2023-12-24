@@ -1,7 +1,12 @@
-from keras import backend as K
+import os 
 import numpy as np
-from keras.callbacks import Callback
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
+
+os.environ["KERAS_BACKEND"] = "torch"
+import keras_core as keras
+
+from keras_core import backend as K
+import numpy as np
+from keras_core.callbacks import Callback
 
 class F1_score(Callback):
     
