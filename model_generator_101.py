@@ -136,7 +136,9 @@ class ModelGenerator(SearchSpace, F1_score):
         return model
 
     def compile_model(self, model):
-        model.compile(loss=self.loss_func, optimizer=self.optimizer, metrics=self.metrics)
+        model.compile(loss=self.loss_func, 
+                      optimizer=self.optimizer, 
+                      metrics=self.metrics)
         return model
 
     def update_weights(self, model):
@@ -222,7 +224,7 @@ class ModelGenerator(SearchSpace, F1_score):
                     layer.set_weights(self.shared_weights['weights'].values[search_index[0]])
                 j += 1
     
-    def train_model(self, model, x_data, y_data, nb_epochs, validation_split=0.3, callbacks=None): 
+    def train_model(self, model, x_data, y_data, nb_epochs, nb_batch_size=32, validation_split=0.0543847722637661, callbacks=None): 
        # print ("x dari train_model:", x_data.shape)
         #print ("y dari train_model:", y_data.shape)
         callback_early_stop = EarlyStopping(monitor='val_f1_macro',
@@ -233,6 +235,7 @@ class ModelGenerator(SearchSpace, F1_score):
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
+                                batch_size=nb_batch_size,
                                 validation_split=validation_split,
                                 callbacks=[f1_score, callback_early_stop],
                                 verbose=0)
@@ -243,6 +246,7 @@ class ModelGenerator(SearchSpace, F1_score):
             history = model.fit(x_data,
                                 y_data,
                                 epochs=nb_epochs,
+                                batch_size=nb_batch_size,
                                 validation_split=validation_split,
                                 callbacks=[f1_score, callback_early_stop],
                                 verbose=0)
