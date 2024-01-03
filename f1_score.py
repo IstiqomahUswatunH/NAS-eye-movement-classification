@@ -1,12 +1,6 @@
-import os 
+from keras import backend as K
 import numpy as np
-
-os.environ["KERAS_BACKEND"] = "torch"
-import keras_core as keras
-
-from keras_core import backend as K
-import numpy as np
-from keras_core.callbacks import Callback
+from keras.callbacks import Callback
 
 class F1_score(Callback):
     

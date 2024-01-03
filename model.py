@@ -1,13 +1,8 @@
-import os 
-import numpy as np
-
-os.environ["KERAS_BACKEND"] = "torch"
-import keras_core as keras
-
 import pickle
-import keras_core.backend as K
-from keras_core.utils import to_categorical
-from keras_core.preprocessing.sequence import pad_sequences 
+import keras.backend as K
+from keras.utils import to_categorical
+from keras_preprocessing.sequence import pad_sequences
+import tensorflow as tf
 from CONSTANTS import *
 from controller import Controller
 from model_generator_101 import ModelGenerator

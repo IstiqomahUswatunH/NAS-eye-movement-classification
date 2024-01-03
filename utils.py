@@ -1,11 +1,7 @@
-import os 
-import numpy as np
-
-os.environ["KERAS_BACKEND"] = "torch"
-import keras_core as keras
-
+import os
 import shutil
 import pickle
+import numpy as np
 from itertools import groupby
 from matplotlib import pyplot as plt
 
@@ -56,8 +52,8 @@ def load_nas_data():
 
 
 def sort_search_data(nas_data):
-    val_accs = [item[1] for item in nas_data]
-    sorted_idx = np.argsort(val_accs)[::-1]
+    val_f1_scores = [item[1] for item in nas_data]
+    sorted_idx = np.argsort(val_f1_scores)[::-1]
     nas_data = [nas_data[x] for x in sorted_idx]
     return nas_data
 
@@ -75,21 +71,27 @@ def get_top_n_architectures(n):
         print('Validation f1 score:', seq_data[1])
 
 
-def get_nas_accuracy_plot():
+def get_nas_f1_plot():
     data = load_nas_data()
-    accuracies = [x[1] for x in data]
-    plt.plot(np.arange(len(data)), accuracies)
+    f1_scores = [x[1] for x in data]
+    plt.plot(np.arange(len(data)), f1_scores)
+    plt.xlabel("architecture")
+    plt.ylabel("f1 macro score")
+    plt.title("plot of f1 macro score for each architecture")
     plt.show()
 
 
-def get_accuracy_distribution():
+def get_f1_distribution():
     event = get_latest_event_id()
     data = load_nas_data()
-    accuracies = [x[1]*100. for x in data]
-    accuracies = [int(x) for x in accuracies]
-    sorted_accs = np.sort(accuracies)
-    count_dict = {k: len(list(v)) for k, v in groupby(sorted_accs)}
+    f1_scores = [x[1]*100. for x in data]
+    f1_scores = [int(x) for x in f1_scores]
+    sorted_f1_scores = np.sort(f1_scores)
+    count_dict = {k: len(list(v)) for k, v in groupby(sorted_f1_scores)}
     plt.bar(list(count_dict.keys()), list(count_dict.values()))
+    plt.xlabel("f1 macro score")
+    plt.ylabel("number of architectures")
+    plt.title("distribution of f1 macro score for architectures")
     plt.show()
 
 

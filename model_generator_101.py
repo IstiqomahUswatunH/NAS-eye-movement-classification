@@ -1,18 +1,12 @@
-import os 
-import numpy as np
-
-os.environ["KERAS_BACKEND"] = "torch"
-import keras_core as keras
-
+import os
 import warnings
 import pandas as pd
-from keras_core import optimizers
-from keras_core.models import Sequential, Model
-from keras_core.layers import Input, Activation, Conv1D, MaxPooling1D, BatchNormalization, Bidirectional, LSTM, Dense, TimeDistributed, Dropout, Flatten
-from CONSTANTS import *
+from keras import optimizers
+from keras.models import Sequential, Model
+from keras.layers import Input, Activation, Conv1D, MaxPooling1D, BatchNormalization, Bidirectional, LSTM, Dense, TimeDistributed, Dropout, Flatten
+from keras.callbacks import EarlyStopping
 
-from keras_core.optimizers import SGD
-from keras_core import backend as K
+from CONSTANTS import *
 from f1_score import F1_score
 
 class SearchSpace(object):
@@ -53,15 +47,13 @@ class SearchSpace(object):
                 layer_id.append(len(act_funcs) * i + j + 1)
          
         vocab = dict(zip(layer_id, layer_params))   #tuple 
-        # print ("apa itu vocab?", vocab)
-        # add dropout (keknnya ga perlu deh)
-        # vocab[len(vocab) + 1] = (('dropout'))
+        
         # add final layer
         if self.target_classes == 2:
             vocab[len(vocab) + 1] = (self.target_classes - 1, 'sigmoid')
         else:
             vocab[len(vocab) + 1] = (self.target_classes, 'softmax')
-        print ("apa itu vocab?", vocab)
+        #print ("apa itu vocab?", vocab)
         return vocab
 
     #----------------------------------------------create search space-----------------------------------------------------------#
@@ -233,7 +225,8 @@ class ModelGenerator(SearchSpace, F1_score):
     def train_model(self, model, x_data, y_data, nb_epochs, validation_split=0.3, callbacks=None): 
        # print ("x dari train_model:", x_data.shape)
         #print ("y dari train_model:", y_data.shape)
-        
+        callback_early_stop = EarlyStopping(monitor='val_f1_macro',
+                                            patience=2)
         f1_score = F1_score()
         if self.one_shot:
             self.set_model_weights(model)
@@ -241,7 +234,7 @@ class ModelGenerator(SearchSpace, F1_score):
                                 y_data,
                                 epochs=nb_epochs,
                                 validation_split=validation_split,
-                                callbacks=[f1_score],
+                                callbacks=[f1_score, callback_early_stop],
                                 verbose=0)
             
             self.update_weights(model)
@@ -251,6 +244,6 @@ class ModelGenerator(SearchSpace, F1_score):
                                 y_data,
                                 epochs=nb_epochs,
                                 validation_split=validation_split,
-                                callbacks=[f1_score],
+                                callbacks=[f1_score, callback_early_stop],
                                 verbose=0)
         return history
