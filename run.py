@@ -4,8 +4,6 @@ from sklearn.preprocessing import OneHotEncoder
 from utils import *
 from model import MODEL
 from CONSTANTS import TOP_N
-from statistics import mode
-from sklearn.preprocessing import MinMaxScaler
 import math
 
 def load_data(df, seq_len,ppd_value):
@@ -84,10 +82,12 @@ df = df.iloc[:-8]
 
 dataset = load_data(df, seq_len,ppd)
 x, y = dataset
-print("cek isi x\n", x)
-print("cek isi y\n", y)
+#print("cek isi x\n", x)
+#print("cek isi y\n", y)
 
 nas_object = MODEL(x, y)
 data = nas_object.search()
 
 get_top_n_architectures(TOP_N)
+get_nas_f1_plot()
+get_f1_distribution()
