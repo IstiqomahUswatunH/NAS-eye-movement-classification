@@ -1,10 +1,10 @@
 ########################################################
 #                   NAS PARAMETERS                     #
 ########################################################
-CONTROLLER_SAMPLING_EPOCHS = 15 # number of epoch for controller sampling
-SAMPLES_PER_CONTROLLER_EPOCH = 10 #sample architecture per controller epoch
+CONTROLLER_SAMPLING_EPOCHS = 2 # number of epoch for controller sampling
+SAMPLES_PER_CONTROLLER_EPOCH = 2 #sample architecture per controller epoch
 CONTROLLER_TRAINING_EPOCHS = 10
-ARCHITECTURE_TRAINING_EPOCHS = 5
+ARCHITECTURE_TRAINING_EPOCHS = 10
 CONTROLLER_LOSS_ALPHA = 0.9
 
 ########################################################
@@ -33,15 +33,6 @@ ONE_SHOT = True     #mengontrol apakah akan menggunakan one shot trainig atau ti
                         #one shot training untuk mengambil pengetahuan atau bobot (weights)
                         # yang sudah ada dari model sebelumnya dan menggunakannya sebagai 
                         # inisialisasi atau titik awal untuk melatih model baru
-
-########################################################
-#           CALCULATE TOTAL COMBINATIONS               #
-########################################################
-
-combination_layer_values = [8, 16, 32, 64]
-combination_act_funcs = ['tanh', 'relu', 'elu']
-k_max_len = MAX_ARCHITECTURE_LENGTH - 1 # cz the last element is the final layer and it'll be the same for all architectures
-TOTAL_COMBINATIONS = len(combination_layer_values) ** k_max_len * len(combination_act_funcs) ** k_max_len
 
 ########################################################
 #                   DATA PARAMETERS                    #
