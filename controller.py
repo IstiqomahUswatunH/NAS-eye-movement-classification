@@ -1,14 +1,10 @@
 import os
 import numpy as np
-
-os.environ["KERAS_BACKEND"] = "torch"
-import keras_core as keras
-
-from keras_core import optimizers
-from keras_core.layers import Dense, LSTM
-from keras_core.models import Model
-from keras_core.layers import Input
-from keras_core.preprocessing.sequence import pad_sequences  #untuk mengisi (padding) atau memangkas (truncating) sequence
+from keras import optimizers
+from keras.layers import Dense, LSTM
+from keras.models import Model
+from keras.engine.input_layer import Input
+from keras_preprocessing.sequence import pad_sequences  #untuk mengisi (padding) atau memangkas (truncating) sequence
 
 from model_generator_101 import SearchSpace
 
@@ -26,9 +22,6 @@ class Controller(SearchSpace):
         self.controller_decay = CONTROLLER_DECAY
         self.controller_momentum = CONTROLLER_MOMENTUM
         self.use_predictor = CONTROLLER_USE_PREDICTOR
-        self.total_combinations = TOTAL_COMBINATIONS
-        
-        print("TOTAL COMBINATIONS:", self.total_combinations)
 
         # fie path of controller weights to be stoted at
         self.controller_weights = 'LOGS/controller_weights.h5'
@@ -57,15 +50,8 @@ class Controller(SearchSpace):
         while len(samples) < number_of_samples:
             seed = [] # initialise the empty list for architecture sequence
             
-            # KALO ERROR, TARUH LINE CHECK POSSIBLE ARCHITECTURE TARUH DI SINI 
-            
             # while len of generated sequence is less than maximum architecture length
             while len(seed) < self.max_len:
-                
-                # if all possible architectures have been sampled, return the samples
-                if len(self.seq_data) == self.total_combinations:
-                    print ("ALL POSSIBLE ARCHITECTURES HAVE BEEN SAMPLED")
-                    return samples
                                 
                 # pad seq for corectly shaped input for controller model
                 sequence = pad_sequences([seed], maxlen=self.max_len - 1, padding='pre') 
@@ -128,7 +114,7 @@ class Controller(SearchSpace):
                                                                    clipnorm=1.0)
         # compile model depending on loss func and optimzer provided
         model.compile(optimizer=optim, 
-                      loss={'main_output': loss_func})
+                      loss={'main_output': loss_func}, run_eagerly=True)
                     # if use predictor, add mse loss for the predictor output
                     # loss={'main_output': loss_func, 'predictor_output': 'mse'}, 
                     # loss_weights={'main_output': 1, 'predictor_output': 1})
@@ -151,7 +137,7 @@ class Controller(SearchSpace):
     def hybrid_control_model(self, controller_input_shape, controller_batch_size):
         #main_input = Input(shape=controller_input_shape, batch_shape=controller_batch_size, name='main_input')         #AKU GANTI
         main_input = Input(shape=controller_input_shape, name='main_input')
-        print ("debug incompatible:", controller_input_shape)
+        #print ("debug incompatible:", controller_input_shape)
         x = LSTM(self.controller_lstm_dim, return_sequences=True)(main_input)
         predictor_output = Dense(1, activation='sigmoid', name='predictor_output')(x)
         main_output = Dense(self.controller_classes, activation='softmax', name='main_output')(x)
